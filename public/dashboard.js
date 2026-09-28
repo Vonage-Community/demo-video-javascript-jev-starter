@@ -88,9 +88,10 @@ window.acceptEscalation = async function (customerId, customerSessionId) {
     // Connect to the Customer Session
     customerSession = OT.initSession(applicationId, customerSessionId);
 
+    videoControls.style.display = 'flex'; // Show video controls
+
     customerSession.on('streamCreated', (event) => {
         subscriberEl.innerHTML = ''; // Clear waiting text
-        videoControls.style.display = 'flex'; // Show video controls when connected
         customerSession.subscribe(event.stream, subscriberEl, {
             insertMode: 'append', width: '100%', height: '100%'
         }, (error) => {

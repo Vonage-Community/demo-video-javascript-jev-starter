@@ -122,12 +122,14 @@ function transitionToVideoCall() {
   videoModal.showModal();
   session = OT.initSession(applicationId, sessionId);
 
+  videoControls.style.display = 'flex'; // Show video controls
+
+
   // Listen for the employee joining the session
   session.on('streamCreated', (event) => {
     subscriberEl.innerHTML = ''; 
     document.getElementById('modal-title').textContent = "Live Support Connected";
-    videoControls.style.display = 'flex'; // Show video controls once connected
-
+    
     subscriber = session.subscribe(event.stream, subscriberEl, {
       insertMode: 'append', width: '100%', height: '100%'
     });
