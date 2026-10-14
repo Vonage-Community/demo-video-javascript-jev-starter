@@ -2,6 +2,8 @@
 
 This application is intended to showcase to developers a possible use case of [Vonage Video API](https://developer.vonage.com/en/video/overview?source=video) and [TypeSafe AI](https://typesafe.ai/) to create an AI support agent that quickly detects if a user is getting frustrated and start a video call with a Human agent.
 
+Read more in the [blog post](https://developer.vonage.com/en/blog/from-frustrated-chats-to-live-video-support-with-jev-and-vonage)
+
 ## Features
 
 - The Vonage Video API [Signaling](https://developer.vonage.com/en/video/guides/signaling?source=video) is used to send notifications to the Employees' dashboard.
