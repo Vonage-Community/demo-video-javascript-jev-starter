@@ -31,6 +31,9 @@ const vonage = new Vonage({
 // In-memory store for room sessions
 const roomToSessionIdDictionary = {};
 
+// Latest Jev evaluation, so the employee dashboard can show the confidence scores
+let latestJev = null;
+
 // Helper to ensure the dispatch session always exists
 async function getDispatchSessionId() {
   if (roomToSessionIdDictionary['dispatch']) {
@@ -85,6 +88,11 @@ app.get('/api/auth/customer', async (req, res) => {
   }
 });
 
+// The employee dashboard polls this to show Jev's latest confidence scores
+app.get('/api/jev/latest', (req, res) => {
+  res.json(latestJev || {});
+});
+
 // Jev Interception & Escalation Trigger
 app.post('/api/evaluate', async (req, res) => {
   const { messages } = req.body;
@@ -119,21 +127,34 @@ app.post('/api/evaluate', async (req, res) => {
     const frustrationLevel = evaluation.answers.frustrationLevel.legend[Math.round(evaluation.answers.frustrationLevel.score)];
     const wantsHuman = evaluation.answers.explicitEscalation.noul > 0.8; // Returns true/false based on probability
 
+    // Raw numbers, shown on the employee dashboard as the decision thresholds
+    const scores = {
+      frustrationScore,
+      sentiment: userSentiment,
+      sentimentConfidence: userSentimentConfidence,
+      wantsHumanProbability: evaluation.answers.explicitEscalation.noul
+    };
+    const lastMessage = messages[messages.length - 1].text;
+
     // The Escalation Threshold
     if (frustrationScore >= 2 || (['frustrated', 'angry'].includes(userSentiment) && userSentimentConfidence > 0.8) || wantsHuman) {
 
-      let message = `${wantsHuman || ['angry'].includes(userSentiment) ? "I'll connect you to a live agent." : 'It seems like you might need more help than I can offer. Would you like to connect with a live agent?'}`;
+      let message = `${wantsHuman || ['angry'].includes(userSentiment) ? "Okay, well, let's throw you a bone. I'll get a human on the line." : "Okay, well, let's throw you a bone and get a human on the line. Shall I connect you?"}`;
+
+      latestJev = { at: Date.now(), lastMessage, action: 'offer_escalation', scores };
       return res.json({
         action: 'offer_escalation',
         sentiment: userSentiment,
         frustrationLevel: frustrationLevel,
-        lastMessage: messages[messages.length - 1].text,
+        lastMessage,
+        scores,
         message
       });
     }
 
     // Pass to AI Agent
-    return res.json({ action: 'continue' });
+    latestJev = { at: Date.now(), lastMessage, action: 'continue', scores };
+    return res.json({ action: 'continue', scores });
 
   } catch (error) {
     console.error("Jev evaluation failed:", error);

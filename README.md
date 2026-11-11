@@ -1,4 +1,6 @@
-# Vonage Video API x TypeSafe AI Jev demo
+# Human, Please
+
+A Jev-a-thon entry: a support chat where JEV throws you a bone (and a human) when you've had enough.
 
 This application is intended to showcase to developers a possible use case of [Vonage Video API](https://developer.vonage.com/en/video/overview?source=video) and [TypeSafe AI](https://typesafe.ai/) to create an AI support agent that quickly detects if a user is getting frustrated and start a video call with a Human agent.
 

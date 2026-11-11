@@ -6,7 +6,211 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Help Desk Support</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://video.standard.vonage.com/v2/js/opentok.min.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --text: #0b0b0b;
+      --muted: #55655a;
+      --border: #0b0b0b;
+      --border-color: #0b0b0b;
+      --accent: #1f6b3a;
+      --accent-soft: #e6f2e9;
+      --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    #employee-dashboard-link {
+      display: block;
+      width: fit-content;
+      margin: 1rem auto 0;
+      color: var(--accent);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    #employee-dashboard-link::before { content: "[ "; }
+    #employee-dashboard-link::after { content: " ]"; }
+    #employee-dashboard-link:hover { background: var(--accent); color: #fff; }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      width: min(640px, calc(100% - 2rem));
+      height: min(78vh, 720px);
+      margin: 1.25rem auto;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 0;
+      box-shadow: 6px 6px 0 var(--accent);
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 0.9rem 1.25rem;
+      border-bottom: 2px solid var(--border);
+      background: var(--surface);
+      text-align: left;
+    }
+    .chat-header h2 { margin: 0; font-size: 1.1rem; font-weight: 700; }
+    .chat-header h2::before { content: "$ "; color: var(--accent); }
+    .chat-header h2::after { content: "_"; color: var(--accent); animation: blink 1s steps(1) infinite; }
+
+    .chat-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      padding: 1.1rem;
+      overflow-y: auto;
+      background: var(--surface);
+    }
+
+    .message {
+      max-width: 82%;
+      padding: 0.6rem 0.85rem;
+      border: 2px solid var(--border);
+      border-radius: 0;
+      overflow-wrap: anywhere;
+      animation: pop-in 0.15s ease;
+    }
+
+    .message.bot {
+      align-self: flex-start;
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 3px 3px 0 var(--accent);
+    }
+    .message.bot::before { content: "jev> "; color: var(--accent); font-weight: 700; }
+
+    .message:not(.bot) {
+      align-self: flex-end;
+      background: var(--border);
+      color: #fff;
+    }
+    .message:not(.bot)::before { content: "you> "; color: #8fd4a4; font-weight: 700; }
+
+    .chat-form {
+      display: flex;
+      gap: 0.6rem;
+      padding: 0.8rem;
+      border-top: 2px solid var(--border);
+      background: var(--surface);
+    }
+
+    #chat-input {
+      flex: 1;
+      min-width: 0;
+      padding: 0.6rem 0.8rem;
+      font-family: var(--mono);
+      font-size: 0.92rem;
+      color: var(--text);
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 0;
+    }
+    #chat-input::placeholder { color: var(--muted); }
+    #chat-input:focus { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+    button {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.5rem 0.9rem;
+      border: 2px solid var(--border);
+      border-radius: 0;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.1s ease, color 0.1s ease;
+    }
+    button::before { content: "[ "; color: var(--accent); }
+    button::after { content: " ]"; color: var(--accent); }
+    button:hover { background: var(--accent); color: #fff; }
+    button:hover::before, button:hover::after { color: #fff; }
+    button:active { transform: translate(2px, 2px); }
+    button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    .chat-form button[type="submit"] { background: var(--accent); color: #fff; }
+    .chat-form button[type="submit"]::before,
+    .chat-form button[type="submit"]::after { color: #fff; }
+    .chat-form button[type="submit"]:hover { background: var(--border); }
+
+    .btn-danger { background: var(--border); color: #fff; }
+    .btn-danger:hover { background: #000; }
+
+    /* Video call modal */
+    #video-modal {
+      width: min(1000px, 92vw);
+      padding: 1.25rem;
+      color: var(--text);
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 0;
+      box-shadow: 8px 8px 0 var(--accent);
+      font-family: var(--mono);
+    }
+    #video-modal::backdrop { background: rgba(11, 11, 11, 0.6); }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    #modal-title { margin: 0; font-size: 1.05rem; }
+    #modal-title::before { content: "$ "; color: var(--accent); }
+
+    #video-controls { align-items: center; }
+
+    #video-modal .video-layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+      min-height: 340px;
+    }
+
+    #video-modal .video-box {
+      position: relative;
+      overflow: hidden;
+      min-height: 220px;
+      background: #0b0b0b;
+      color: #bfe3c9;
+      border: 2px solid var(--border);
+      box-shadow: 4px 4px 0 var(--accent);
+    }
+
+    #video-modal .video-box > div,
+    #video-modal .video-box .OT_publisher,
+    #video-modal .video-box .OT_subscriber {
+      position: absolute !important;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    @keyframes pop-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @keyframes blink { 50% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+    @media (max-width: 700px) { #video-modal .video-layout { grid-template-columns: 1fr; } }
+  </style>
 </head>
 
 <body>
@@ -48,6 +252,7 @@
     </div>
   </dialog>
 
+  <script src="jev-panel.js"></script>
   <script src="customer.js"></script>
 </body>
 
